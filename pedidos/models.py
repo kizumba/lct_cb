@@ -6,6 +6,7 @@ from produtos.models import Produto
 
 from usuarios.models import Usuario, Endereco as EnderecoUsuario
 
+
 class EnderecoPedido(models.Model):
     logradouro = models.CharField(max_length=100, null=True, blank=True)
     numero = models.CharField(max_length=6, null=True, blank=True)
@@ -24,19 +25,27 @@ class StatusChoices(models.TextChoices):
 
 
 class Pedido(models.Model):
-    valor_subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
-    taxa_entrega = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
-    desconto = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
-    valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    valor_subtotal = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    taxa_entrega = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    desconto = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    valor_total = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal("0.00"))
     observacao = models.TextField(null=True, blank=True)
 
-    status = models.CharField(max_length=10, choices=StatusChoices.choices, default=StatusChoices.CARRINHO)
+    status = models.CharField(
+        max_length=10, choices=StatusChoices.choices, default=StatusChoices.CARRINHO)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="pedidos")
-    entregador = models.ForeignKey(Entregador, on_delete=models.CASCADE, related_name="pedidos")
-    endereco = models.ForeignKey(EnderecoPedido, on_delete=models.PROTECT, related_name="pedidos", null=True, blank=True)
+    usuario = models.ForeignKey(
+        Usuario, on_delete=models.CASCADE, related_name="pedidos")
+    entregador = models.ForeignKey(
+        Entregador, on_delete=models.CASCADE, related_name="pedidos")
+    endereco = models.ForeignKey(
+        EnderecoPedido, on_delete=models.PROTECT, related_name="pedidos", null=True, blank=True)
 
     # def save(self, *args, **kwargs):
     #     subtotal = self.valor_subtotal or Decimal("0.00")
@@ -55,7 +64,8 @@ class Pedido(models.Model):
         if self.usuario_id:
             # Pega o endereço principal do usuário; se não houver, o primeiro
             endereco_usuario = (
-                EnderecoUsuario.objects.filter(usuario_id=self.usuario_id, principal=True).first()
+                EnderecoUsuario.objects.filter(
+                    usuario_id=self.usuario_id, principal=True).first()
                 or EnderecoUsuario.objects.filter(usuario_id=self.usuario_id).first()
             )
 
@@ -74,42 +84,55 @@ class Pedido(models.Model):
                     self.endereco.bairro = endereco_usuario.bairro
                     self.endereco.save()
 
+        if self.pagamentos.exists():
+            # Se houver pagamentos, atualiza o valor do pedido nos pagamentos
+            
+            for pagamento in self.pagamentos.all():
+                self.status = StatusChoices.PAGO if pagamento.pago else StatusChoices.PENDENTE
+                pagamento.valor_pedido = self.valor_total
+                pagamento.save()
+
         super().save(*args, **kwargs)
 
     def __str__(self):
         cpf = self.usuario.cpf if self.usuario else "Sem usuário"
         return f"Pedido: {self.id}"
-    
 
 
 class ItemPedido(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name="item_pedido")
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="item_pedido")
-    preco_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    pedido = models.ForeignKey(
+        Pedido, on_delete=models.CASCADE, related_name="item_pedido")
+    produto = models.ForeignKey(
+        Produto, on_delete=models.CASCADE, related_name="item_pedido")
+    preco_unitario = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True)
     quantidade = models.IntegerField(default=1)
     observacao = models.TextField(null=True, blank=True)
-    preco_total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    preco_total = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal("0.00"))
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
     def calcular_total(self):
-        base = (self.preco_unitario or Decimal("0.00")) * (self.quantidade or 1)
-        
+        base = (self.preco_unitario or Decimal(
+            "0.00")) * (self.quantidade or 1)
+
         # Puxa os adicionais direto do banco de dados
         if self.pk:
             total_adicionais = sum(
-                (a.preco_total or Decimal("0.00") for a in self.adicionais.all()),
+                (a.preco_total or Decimal("0.00")
+                 for a in self.adicionais.all()),
                 Decimal("0.00")
             )
         else:
             total_adicionais = Decimal("0.00")
-            
+
         return base + total_adicionais
 
     def save(self, *args, **kwargs):
         if self.preco_unitario is None and self.produto_id:
             self.preco_unitario = self.produto.valor
-            
+
         self.preco_total = self.calcular_total()
         super().save(*args, **kwargs)
 
@@ -130,12 +153,16 @@ class Adicional(models.Model):
 
 
 class ItemAdicional(models.Model):
-    adicional = models.ForeignKey(Adicional, on_delete=models.PROTECT, related_name="adicionais")
-    item_pedido = models.ForeignKey(ItemPedido, on_delete=models.PROTECT, related_name="adicionais")
-    
-    preco_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    adicional = models.ForeignKey(
+        Adicional, on_delete=models.PROTECT, related_name="adicionais")
+    item_pedido = models.ForeignKey(
+        ItemPedido, on_delete=models.PROTECT, related_name="adicionais")
+
+    preco_unitario = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True)
     quantidade = models.IntegerField(default=1)
-    preco_total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    preco_total = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal("0.00"))
 
     def save(self, *args, **kwargs):
         if self.preco_unitario is None and self.adicional_id:

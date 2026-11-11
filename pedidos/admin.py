@@ -34,7 +34,6 @@ class PedidoAdmin(admin.ModelAdmin):
         "id", "valor_total", "valor_subtotal", "taxa_entrega",
         "desconto", "status", "criado_em", "usuario",
     )
-    list_editable = ("status",)
     list_filter = ("status", "criado_em",)
     search_fields = ("usuario__cpf", "id",)
 

@@ -12,6 +12,8 @@ class PagamentoAdmin(admin.ModelAdmin):
                     "pago"
                     )
     search_fields = ("pedido", )
+    readonly_fields = ("troco", "valor_pedido", "criado_em", "atualizado_em")
+    list_editable = ("pago", )
 
 
 @admin.register(FormaPagamento)

@@ -1,6 +1,6 @@
 from decimal import Decimal
 from django.db import models
-from pedidos.models import Pedido
+from pedidos.models import Pedido, StatusChoices
 
 
 class FormaPagamento(models.Model):
@@ -41,6 +41,13 @@ class Pagamento(models.Model):
             self.troco = self.valor_pago - self.valor_pedido
         else:
             self.troco = Decimal("0.00")
+
+        self.pedido = Pedido.objects.get(pk=self.pedido.id)
+
+        if self.pago:
+            self.pedido.status = StatusChoices.PAGO
+        else:
+            self.pedido.status = StatusChoices.PENDENTE
 
         super().save(*args, **kwargs)
 
