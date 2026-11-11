@@ -84,6 +84,8 @@ class Pedido(models.Model):
                     self.endereco.bairro = endereco_usuario.bairro
                     self.endereco.save()
 
+        super().save(*args, **kwargs)
+
         if self.pagamentos.exists():
             # Se houver pagamentos, atualiza o valor do pedido nos pagamentos
             
@@ -92,7 +94,7 @@ class Pedido(models.Model):
                 pagamento.valor_pedido = self.valor_total
                 pagamento.save()
 
-        super().save(*args, **kwargs)
+            super().save(*args, **kwargs)
 
     def __str__(self):
         cpf = self.usuario.cpf if self.usuario else "Sem usuário"
