@@ -89,7 +89,7 @@
         {% endif %}
         
         {% if not user.is_authenticated %}
-          <li><a href="#">Lista de Produtos</a></li>
+          <li><a href="{% url 'produto_list' %}">Lista de Produtos</a></li>
           <!-- <li><a href="#">Cadastre-se</a></li> -->
           <li><a href="{% url 'login' %}">Entrar</a></li>
         {% endif %}

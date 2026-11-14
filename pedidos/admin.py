@@ -24,6 +24,7 @@ class ItemAdicionalInline(admin.TabularInline):
 class ItemPedidoInline(admin.TabularInline):
     model = ItemPedido
     extra = 1
+    search_fields = ("pedido__id", "produto__nome")
     readonly_fields = ("preco_total", "preco_unitario", "observacao")
     autocomplete_fields = ("produto",)
 
