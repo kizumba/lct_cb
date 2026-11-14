@@ -21,6 +21,14 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
+from accounts.views import login_view, lougout_view, home, register_view
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+
+    path("login/", login_view, name="login"),
+    path("logout/", lougout_view, name="logout"),
+    path("register/", register_view, name="register"),
+    path("", home, name="home"),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
