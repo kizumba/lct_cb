@@ -1,5 +1,7 @@
 # Produtos e Categorias
-
+- [ ] forms
+- [ ] views
+- [ ] urls
 
 # Instalação e Teste
 - python -m venv venv

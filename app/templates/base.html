@@ -80,7 +80,7 @@
               
 
         {% if user.is_authenticated %}
-        <li><a href="#">Produtos</a></li>
+        <li><a href="{% url 'produto_list' %}">Produtos</a></li>
         <li><a href="#">Pedidos</a></li>
         <li><a href="#">Pagamentos</a></li>
         <li><a href="#">Clientes</a></li>
